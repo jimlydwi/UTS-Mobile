@@ -106,6 +106,15 @@ fun GameScreen(gameViewModel: GameViewModel = viewModel()) {
                     fontSize = 16.sp
                 )
             }
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { gameViewModel.checkUserGuess() }
+            ) {
+                Text(
+                    text = stringResource(R.string.Tambah_Kata),
+                    fontSize = 16.sp
+                )
+            }
 
             OutlinedButton(
                 onClick = { gameViewModel.skipWord() },
