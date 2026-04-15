@@ -59,7 +59,7 @@ import com.example.unscramble.R
 import com.example.unscramble.ui.theme.UnscrambleTheme
 
 @Composable
-fun GameScreen(gameViewModel: GameViewModel = viewModel()) {
+fun GameScreen(gameViewModel: GameViewModel = viewModel(factory = GameViewModel.Factory)) {
     val gameUiState by gameViewModel.uiState.collectAsState()
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
 
@@ -106,12 +106,12 @@ fun GameScreen(gameViewModel: GameViewModel = viewModel()) {
                     fontSize = 16.sp
                 )
             }
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { gameViewModel.checkUserGuess() }
+            OutlinedButton(
+                onClick = { gameViewModel.saveNewWord() }, // Memanggil fungsi simpan
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = stringResource(R.string.Tambah_Kata),
+                    text = (stringResource(R.string.Tambah_Kata)), // Anda bisa menambahkan string ini di strings.xml
                     fontSize = 16.sp
                 )
             }

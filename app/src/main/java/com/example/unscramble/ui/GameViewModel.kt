@@ -20,6 +20,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.unscramble.data.GameDao
+import com.example.unscramble.data.GameEntity
+import com.example.unscramble.data.GameRoomDb
 import com.example.unscramble.data.MAX_NO_OF_WORDS
 import com.example.unscramble.data.SCORE_INCREASE
 import com.example.unscramble.data.allWords
@@ -27,11 +34,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * ViewModel containing the app data and methods to process the data
  */
-class GameViewModel : ViewModel() {
+class GameViewModel(private val gameDao: GameDao) : ViewModel() {
 
     // Game UI state
     private val _uiState = MutableStateFlow(GameUiState())
@@ -119,6 +127,15 @@ class GameViewModel : ViewModel() {
         }
     }
 
+    fun saveNewWord() {
+        val wordToSave = userGuess
+        if (wordToSave.isNotBlank()) {
+            viewModelScope.launch {
+                gameDao.insert(GameEntity(word = wordToSave.trim().lowercase()))
+                updateUserGuess("")
+            }
+        }
+    }
     private fun shuffleCurrentWord(word: String): String {
         val tempWord = word.toCharArray()
         // Scramble the word
@@ -139,4 +156,16 @@ class GameViewModel : ViewModel() {
             shuffleCurrentWord(currentWord)
         }
     }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as android.app.Application)
+                val gameDao = GameRoomDb.getDatabase(application).gameDao()
+                GameViewModel(gameDao)
+            }
+        }
+    }
 }
+
+
