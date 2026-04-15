@@ -45,6 +45,7 @@ class GameViewModel(private val gameDao: GameDao) : ViewModel() {
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
+    private var activeWords: MutableList<String> = allWords.toMutableList()
     var userGuess by mutableStateOf("")
         private set
 
@@ -53,7 +54,15 @@ class GameViewModel(private val gameDao: GameDao) : ViewModel() {
     private lateinit var currentWord: String
 
     init {
-        resetGame()
+        viewModelScope.launch {
+            val savedWords = gameDao.getAll()
+            savedWords.forEach { entity ->
+                if (!activeWords.contains(entity.word)) {
+                    activeWords.add(entity.word)
+                }
+            }
+            resetGame()
+        }
     }
 
     /*
@@ -131,7 +140,12 @@ class GameViewModel(private val gameDao: GameDao) : ViewModel() {
         val wordToSave = userGuess
         if (wordToSave.isNotBlank()) {
             viewModelScope.launch {
-                gameDao.insert(GameEntity(word = wordToSave.trim().lowercase()))
+                val cleanedWord = wordToSave.trim().lowercase()
+                gameDao.insert(GameEntity(word = cleanedWord))
+                if (!activeWords.contains(cleanedWord)) {
+                    activeWords.add(cleanedWord)
+                }
+
                 updateUserGuess("")
             }
         }
@@ -148,7 +162,7 @@ class GameViewModel(private val gameDao: GameDao) : ViewModel() {
 
     private fun pickRandomWordAndShuffle(): String {
         // Continue picking up a new random word until you get one that hasn't been used before
-        currentWord = allWords.random()
+        currentWord = activeWords.random()
         return if (usedWords.contains(currentWord)) {
             pickRandomWordAndShuffle()
         } else {
